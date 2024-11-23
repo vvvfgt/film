@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  app:
+    build: ./docker/php/
+    container_name: "php-film"
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/php-custom.ini:/usr/local/etc/php/conf.d/php-custom.ini
+      - ./docker:/docker
+    networks:
+      - app-network
+    depends_on:
+      - database
+
+  database:
+    image: mysql:8
+    container_name: "mysql-film"
+    ports:
+      - "3305:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "app"
+    networks:
+      - app-network
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  webserver:
+    image: nginx:alpine
+    container_name: "nginx-film"
+    ports:
+      - "8005:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  ms_data:
+  mysql_data:
